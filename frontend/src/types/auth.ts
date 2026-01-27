@@ -6,7 +6,7 @@
 export interface User {
   id: string;
   email: string;
-  username: string;          // ✅ AJOUT
+  username: string;          
   emailVerified: boolean;
   createdAt: string;
 

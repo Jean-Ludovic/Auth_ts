@@ -6,9 +6,11 @@
 
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { isAdmin } from '@/lib/isAdmin';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
+  adminOnly?: boolean; // ✅ ajout
 }
 
 /**
@@ -16,8 +18,8 @@ interface ProtectedRouteProps {
  * Checks authentication status before rendering children
  * Redirects to login with return URL if not authenticated
  */
-export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { isAuthenticated, isLoading } = useAuth();
+export function ProtectedRoute({ children, adminOnly = false }: ProtectedRouteProps) {
+  const { isAuthenticated, isLoading, user } = useAuth();
   const location = useLocation();
 
   // Show loading state while checking auth
@@ -34,14 +36,12 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   // Redirect to login if not authenticated
   if (!isAuthenticated) {
-    // Save current location to redirect back after login
-    return (
-      <Navigate
-        to="/login"
-        state={{ from: location }}
-        replace
-      />
-    );
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  // ✅ Admin gate
+  if (adminOnly && !isAdmin(user)) {
+    return <Navigate to="/dashboard" replace />;
   }
 
   return <>{children}</>;

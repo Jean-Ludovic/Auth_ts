@@ -8,63 +8,65 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '@/components/auth/AuthProvider';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { Toaster } from '@/components/ui/toaster';
+
 import { LoginPage } from '@/pages/LoginPage';
 import { RegisterPage } from '@/pages/RegisterPage';
 import { EmailVerificationPage } from '@/pages/EmailVerificationPage';
 import { DashboardPage } from '@/pages/DashboardPage';
-import ForgotPasswordPage from "@/pages/ForgotPassword";
-import ResetPasswordPage from "@/pages/ResetPassword";
+import ForgotPasswordPage from '@/pages/ForgotPassword';
+import ResetPasswordPage from '@/pages/ResetPassword';
+import { AdminDashboardPage } from '@/pages/AdminDashboardPage';
 
-/**
- * TanStack Query client configuration
- * Handles caching, refetching, and error handling for API calls
- */
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       refetchOnWindowFocus: false,
       retry: false,
-      staleTime: 5 * 60 * 1000, // 5 minutes
+      staleTime: 5 * 60 * 1000,
     },
-    mutations: {
-      retry: false,
-    },
+    mutations: { retry: false },
   },
 });
 
-/**
- * Main App component
- * Provides routing, authentication context, and global state
- */
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <AuthProvider>
-<Routes>
-  {/* Public routes */}
-  <Route path="/login" element={<LoginPage />} />
-  <Route path="/register" element={<RegisterPage />} />
-  <Route path="/verify-email" element={<EmailVerificationPage />} />
-  <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-  <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Routes>
+            {/* Public routes */}
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/verify-email" element={<EmailVerificationPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
 
-  {/* Protected routes */}
-  <Route
-    path="/dashboard"
-    element={
-      <ProtectedRoute>
-        <DashboardPage />
-      </ProtectedRoute>
-    }
-  />
+            {/* Admin route */}
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute adminOnly>
+                  <AdminDashboardPage />
+                </ProtectedRoute>
+              }
+            />
 
-  {/* Default route */}
-  <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            {/* Protected routes */}
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <DashboardPage />
+                </ProtectedRoute>
+              }
+            />
 
-  {/* 404 route */}
-  <Route path="*" element={<Navigate to="/login" replace />} />
-</Routes>
+            {/* Default route */}
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+
+            {/* 404 */}
+            <Route path="*" element={<Navigate to="/login" replace />} />
+          </Routes>
 
           <Toaster />
         </AuthProvider>
