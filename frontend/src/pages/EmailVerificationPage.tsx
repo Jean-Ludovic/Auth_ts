@@ -3,7 +3,7 @@
  * Verifies user email with 4-digit code
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -15,6 +15,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+
 import {
   Card,
   CardContent,
@@ -30,11 +31,8 @@ export function EmailVerificationPage() {
   const { verifyEmail, isVerifying, isAuthenticated } = useAuth();
   const emailFromQuery = searchParams.get('email') || '';
 
-  // Redirect if already authenticated
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/dashboard', { replace: true });
-    }
+    if (isAuthenticated) navigate('/dashboard', { replace: true });
   }, [isAuthenticated, navigate]);
 
   const {
@@ -44,35 +42,20 @@ export function EmailVerificationPage() {
     setValue,
   } = useForm<EmailVerificationFormData>({
     resolver: zodResolver(emailVerificationSchema),
-    defaultValues: {
-      email: emailFromQuery,
-      code: '',
-    },
+    defaultValues: { email: emailFromQuery, code: '' },
   });
 
-  // Update email field when query param changes
   useEffect(() => {
-    if (emailFromQuery) {
-      setValue('email', emailFromQuery);
-    }
+    if (emailFromQuery) setValue('email', emailFromQuery);
   }, [emailFromQuery, setValue]);
 
   const onSubmit = async (data: EmailVerificationFormData) => {
     verifyEmail(data);
   };
 
-  // Handle paste event for verification code input
   const handleCodeInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, '').slice(0, 4);
     setValue('code', value, { shouldValidate: true });
-  };
-
-  // Auto-focus next input for better UX
-  const handleCodeKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Backspace' && e.currentTarget.value === '') {
-      const prevInput = e.currentTarget.previousElementSibling as HTMLInputElement;
-      prevInput?.focus();
-    }
   };
 
   return (
@@ -84,6 +67,7 @@ export function EmailVerificationPage() {
             Enter the 4-digit code sent to your email address
           </CardDescription>
         </CardHeader>
+
         <form onSubmit={handleSubmit(onSubmit)}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -103,6 +87,7 @@ export function EmailVerificationPage() {
                 </p>
               )}
             </div>
+
             <div className="space-y-2">
               <Label htmlFor="code">Verification Code</Label>
               <Input
@@ -113,7 +98,6 @@ export function EmailVerificationPage() {
                 placeholder="0000"
                 {...register('code')}
                 onChange={handleCodeInput}
-                onKeyDown={handleCodeKeyDown}
                 aria-invalid={errors.code ? 'true' : 'false'}
                 className="text-center text-2xl tracking-widest"
               />
@@ -123,20 +107,18 @@ export function EmailVerificationPage() {
                 </p>
               )}
               <p className="text-xs text-muted-foreground">
-                Enter the 4-digit code sent to your email
+                Tip: you can paste the code directly.
               </p>
             </div>
           </CardContent>
+
           <CardFooter className="flex flex-col space-y-4">
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={isVerifying}
-            >
+            <Button type="submit" className="w-full" disabled={isVerifying}>
               {isVerifying ? 'Verifying...' : 'Verify Email'}
             </Button>
+
             <div className="text-center text-sm text-muted-foreground">
-              Didn't receive the code?{' '}
+              Didn&apos;t receive the code?{' '}
               <button
                 type="button"
                 onClick={() => navigate('/register')}
@@ -145,6 +127,7 @@ export function EmailVerificationPage() {
                 Request a new one
               </button>
             </div>
+
             <div className="text-center text-sm text-muted-foreground">
               Already verified?{' '}
               <Link to="/login" className="text-primary hover:underline">
