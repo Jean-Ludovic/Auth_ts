@@ -69,9 +69,10 @@ export async function verifyEmail(
  * Get current user endpoint
  * Fetches authenticated user information
  */
+
 export async function getCurrentUser(): Promise<User> {
-  const response = await api.get<User>('/auth/me');
-  return response.data;
+  const res = await api.get<User>('/auth/me');
+  return res.data; 
 }
 
 /**

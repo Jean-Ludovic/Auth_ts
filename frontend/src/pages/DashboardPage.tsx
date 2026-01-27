@@ -46,6 +46,10 @@ export function DashboardPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
+                <p className="text-sm font-medium text-muted-foreground">Username</p>
+                <p className="text-lg">@{user?.username}</p>
+            </div>
+            <div>
               <p className="text-sm font-medium text-muted-foreground">Email</p>
               <p className="text-lg">{user?.email}</p>
             </div>

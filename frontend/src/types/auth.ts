@@ -6,9 +6,13 @@
 export interface User {
   id: string;
   email: string;
+  username: string;          // ✅ AJOUT
   emailVerified: boolean;
   createdAt: string;
+
+  role?: 'user' | 'admin';   
 }
+
 
 export interface AuthTokens {
   accessToken: string;
