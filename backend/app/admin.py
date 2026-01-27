@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Header, HTTPException
 from sqlmodel import Session, select
 from sqlalchemy import func
 from datetime import datetime, timedelta
-
+from .config import settings
 from .db import get_session
 from .models import User
 from .security import decode_token
@@ -27,10 +27,18 @@ def get_current_user(
         raise HTTPException(status_code=404, detail="User not found")
     return user
 
+
+
 def require_admin(user: User = Depends(get_current_user)) -> User:
-    if getattr(user, "role", "user") != "admin":
-        raise HTTPException(status_code=403, detail="Admin only")
-    return user
+    # 1) allowlist emails
+    if user.email.lower() in [e.lower() for e in settings.admin_emails]:
+        return user
+
+    # 2) ou role en DB
+    if getattr(user, "role", "user") == "admin":
+        return user
+
+    raise HTTPException(status_code=403, detail="Admin only")
 
 @router.get("/users", response_model=ApiResponse[list[dict]])
 def list_users(

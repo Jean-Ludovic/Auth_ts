@@ -2,43 +2,87 @@ import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import {
-  Card, CardContent, CardDescription, CardHeader, CardTitle,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/hooks/useAuth';
-import * as adminApi from '@/api/admin';
+import * as adminApi from '../api/admin';
+import type { AdminUserRow, SignupPoint } from '../api/admin';
 
 import {
-  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
 } from 'recharts';
 
 export function AdminDashboardPage() {
   const { logout, isLoggingOut } = useAuth();
   const [q, setQ] = useState('');
 
-  const { data: users = [], isLoading: usersLoading } = useQuery({
+  // ✅ typed query + error available
+  const usersQuery = useQuery<AdminUserRow[]>({
     queryKey: ['admin', 'users'],
     queryFn: adminApi.listUsers,
   });
 
-  const { data: signups = [], isLoading: signupsLoading } = useQuery({
+  // ✅ typed query + error available
+  const signupsQuery = useQuery<SignupPoint[]>({
     queryKey: ['admin', 'signups', 30],
     queryFn: () => adminApi.getSignups(30),
   });
 
+  const users = usersQuery.data ?? [];
+  const signups = signupsQuery.data ?? [];
+
+  const usersLoading = usersQuery.isLoading;
+  const signupsLoading = signupsQuery.isLoading;
+
+  // ✅ show real errors instead of 0 everywhere
+  if (usersQuery.error || signupsQuery.error) {
+    const msg =
+      (usersQuery.error as any)?.message ||
+      (signupsQuery.error as any)?.message ||
+      'Failed to load admin data';
+
+    return (
+      <div className="min-h-screen bg-background p-4 flex items-center justify-center">
+        <div className="max-w-md w-full space-y-3 rounded-lg border p-4">
+          <h2 className="text-lg font-semibold">Admin data error</h2>
+          <p className="text-sm text-muted-foreground">{msg}</p>
+          <Button
+            onClick={() => {
+              usersQuery.refetch();
+              signupsQuery.refetch();
+            }}
+          >
+            Retry
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase();
     if (!s) return users;
-    return users.filter(u =>
-      u.email.toLowerCase().includes(s) ||
-      u.username.toLowerCase().includes(s)
+    return users.filter(
+      (u) =>
+        u.email.toLowerCase().includes(s) ||
+        u.username.toLowerCase().includes(s)
     );
   }, [q, users]);
 
   const totals = useMemo(() => {
     const total = users.length;
-    const verified = users.filter(u => u.emailVerified).length;
-    const admins = users.filter(u => u.role === 'admin').length;
+    const verified = users.filter((u) => u.emailVerified).length;
+    const admins = users.filter((u) => u.role === 'admin').length;
     return { total, verified, unverified: total - verified, admins };
   }, [users]);
 
@@ -48,9 +92,15 @@ export function AdminDashboardPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-            <p className="text-muted-foreground">Users & registrations overview</p>
+            <p className="text-muted-foreground">
+              Users & registrations overview
+            </p>
           </div>
-          <Button onClick={() => logout()} disabled={isLoggingOut} variant="outline">
+          <Button
+            onClick={() => logout()}
+            disabled={isLoggingOut}
+            variant="outline"
+          >
             {isLoggingOut ? 'Logging out...' : 'Logout'}
           </Button>
         </div>
@@ -62,18 +112,21 @@ export function AdminDashboardPage() {
               <CardTitle className="text-2xl">{totals.total}</CardTitle>
             </CardHeader>
           </Card>
+
           <Card>
             <CardHeader className="pb-2">
               <CardDescription>Verified</CardDescription>
               <CardTitle className="text-2xl">{totals.verified}</CardTitle>
             </CardHeader>
           </Card>
+
           <Card>
             <CardHeader className="pb-2">
               <CardDescription>Unverified</CardDescription>
               <CardTitle className="text-2xl">{totals.unverified}</CardTitle>
             </CardHeader>
           </Card>
+
           <Card>
             <CardHeader className="pb-2">
               <CardDescription>Admins</CardDescription>
@@ -128,15 +181,21 @@ export function AdminDashboardPage() {
                 <table className="w-full text-sm">
                   <thead className="border-b bg-muted/40">
                     <tr>
-                      <th className="px-3 py-2 text-left font-medium">Username</th>
+                      <th className="px-3 py-2 text-left font-medium">
+                        Username
+                      </th>
                       <th className="px-3 py-2 text-left font-medium">Email</th>
-                      <th className="px-3 py-2 text-left font-medium">Verified</th>
+                      <th className="px-3 py-2 text-left font-medium">
+                        Verified
+                      </th>
                       <th className="px-3 py-2 text-left font-medium">Role</th>
-                      <th className="px-3 py-2 text-left font-medium">Created</th>
+                      <th className="px-3 py-2 text-left font-medium">
+                        Created
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
-                    {filtered.map(u => (
+                    {filtered.map((u) => (
                       <tr key={u.id} className="border-b">
                         <td className="px-3 py-2">@{u.username}</td>
                         <td className="px-3 py-2">{u.email}</td>
@@ -147,8 +206,10 @@ export function AdminDashboardPage() {
                             <span className="text-yellow-600">No</span>
                           )}
                         </td>
-                        <td className="px-3 py-2">{u.role}</td>
-                        <td className="px-3 py-2 font-mono text-xs">{String(u.createdAt)}</td>
+                        <td className="px-3 py-2">{u.role ?? 'user'}</td>
+                        <td className="px-3 py-2 font-mono text-xs">
+                          {String(u.createdAt)}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -159,8 +220,5 @@ export function AdminDashboardPage() {
         </Card>
       </div>
     </div>
-
-
-
   );
 }
